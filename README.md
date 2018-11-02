@@ -361,3 +361,106 @@ $ /usr/bin/fdfs_storaged /etc/fdfs/storage.conf
     ```
 
     > 访问上面上传测试中返回的url，即可查看上传的图片
+
+## 上传下载（java）
+
+> 基于springboot整合
+>
+> 参见[Spring Boot集成FastDFS](https://blog.csdn.net/qq_31871785/article/details/75174554) 
+
++ 引入依赖
+
+  ```xml
+  <dependency>
+      <groupId>com.github.tobato</groupId>
+      <artifactId>fastdfs-client</artifactId>
+      <version>1.26.3</version>
+  </dependency>
+  ```
+
++ 启动类配置
+
+  > 在启动类上加上如下2个注解
+
+  ```java
+  @Import(FdfsClientConfig.class)
+  @EnableMBeanExport(registration = RegistrationPolicy.IGNORE_EXISTING)
+  ```
+
++ `application.properties`
+
+  ```properties
+  # 读取时间
+  fdfs.so-timeout=1501
+  fdfs.connect-timeout=601
+  # 缩略图大小
+  fdfs.thumb-image.width=150
+  fdfs.thumb-image.height=150
+  # tracker服务器地址
+  fdfs.tracker-list[0]=10.211.55.4:22122
+  # 线程配置
+  fdfs.pool.max-total=100
+  fdfs.pool.max-wait-millis=60
+  ```
+
+  > **注意**
+  >
+  > 必须先打开`tracker`的`22122`和`23000`端口，否则无法连接
+
++ 主从文件上传
+
+  ```java
+  @Autowired
+  private FastFileStorageClient fastFileStorageClient;
+  
+  @Test
+  public void upload() {
+      File file = new File("/Users/will/Downloads/1039111.jpg");
+      StorePath storePath;
+      try (FileInputStream inputStream = new FileInputStream(file)) {
+          // 上传主文件
+          storePath = fastFileStorageClient.uploadFile(inputStream, file.length(), "jpg", null);
+          System.out.println("主文件上传成功 " + storePath.getGroup() + " " + storePath.getPath());
+      } catch (Exception e) {
+          return;
+      }
+      try (FileInputStream inputStream = new FileInputStream(file)) {
+          // 上传从文件
+          // prefixName：指定从文件的尾缀名，`.jpg`之前的内容，而不是添加在整个文件名之前；该参数不能为null或""
+          // fileExtName：指定文件后缀名，必须是该文件真实的后缀名
+          fastFileStorageClient.uploadSlaveFile(storePath.getGroup(), storePath.getPath(), inputStream, file.length(), "_slave", "jpg");
+          System.out.println("从文件上传成功");
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+  }
+  ```
+
+  > 主从文件概念参见[主从文件](#主从文件) 
+
++ 上传并创建缩略图
+
+  ```java
+  @Test
+  public void uploadCrtThumbImage() {
+      File file = new File("/Users/will/Downloads/1039111.jpg");
+      try (FileInputStream inputStream = new FileInputStream(file)) {
+          // 测试上传原图片并自动创建缩略图
+          // 缩略图尺寸在 application.properties 中定义
+          // 缩略图文件名为：storePath.getPath()_宽x高.后缀名；如：CtM3BFvcF6iALYiSAAAvfv9Uu40001_130x150.jpg
+          StorePath storePath = fastFileStorageClient.uploadImageAndCrtThumbImage(inputStream, file.length(), "jpg", null);
+          System.out.println(storePath.getGroup() + "  " + storePath.getPath());
+      } catch (Exception e) {
+          e.printStackTrace();
+      }
+  }
+  ```
+
++ 下载及删除参见[FastdfsApplicationTests.java](src/test/java/com/shuyan/fastdfs/FastdfsApplicationTests.java) 
+
+## 概念
+
+### 主从文件
+
++ `主从文件`只在`文件名`上存在联系，其他方面没有任何联系
++ `fastdfs`不会自动生成从文件，从文件是应用层自己上传的，`fastdfs`只不过使用主从文件的模式使这两个文件在文件名上产生关联，方便查找
