@@ -391,8 +391,8 @@ $ /usr/bin/fdfs_storaged /etc/fdfs/storage.conf
 
   ```properties
   # 读取时间
-  fdfs.so-timeout=1501
-  fdfs.connect-timeout=601
+  fdfs.so-timeout=1500
+  fdfs.connect-timeout=600
   # 缩略图大小
   fdfs.thumb-image.width=150
   fdfs.thumb-image.height=150

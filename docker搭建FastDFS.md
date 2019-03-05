@@ -32,25 +32,33 @@
   docker exec -it storage /bin/bash
   ```
 
-+ 修改`mod_fastdfs.conf`文件
+  + 修改`/etc/fdfs/mod_fastdfs.conf`文件
 
-  修改该文件中`group_name`为上面设置的分组名称
+    修改该文件中`group_name`为上面设置的分组名称
 
-  ```shell
-  group_name=cxfwlm
-  ```
+    ```shell
+    group_name=cxfwlm
+    ```
 
-+ 配置nginx
+  + 配置nginx
 
-  ```shell
-  server {
-          listen 8888;
-          server_name     192.168.0.236;
-          location /cxfwlm/M00/ {
-                  ngx_fastdfs_module;
-          }
-      }
-  ```
+    配置文件在`/usr/local/nginx/conf/nginx.conf`
+
+    ```shell
+    server {
+            listen 8888;
+            server_name     192.168.0.236;
+            location /cxfwlm/M00/ {
+                    ngx_fastdfs_module;
+            }
+        }
+    ```
+
+    重启nginx
+
+    ```shell
+    $ /usr/local/nginx/sbin/nginx -s reload
+    ```
 
 + 测试
 
