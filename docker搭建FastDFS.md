@@ -15,7 +15,7 @@
 + 构建`storage`服务
 
   ```shell
-  docker run -d --network=host --name storage -e TRACKER_SERVER=ip:22122 -v /var/fdfs/storage:/var/fdfs -e GROUP_NAME=group1 delron/fastdfs storage
+  docker run -d --network=host --name storage -e TRACKER_SERVER=ip:22122 -v /var/fdfs/storage:/var/fdfs -e GROUP_NAME=cxfwlm delron/fastdfs storage
   ```
 
   + `TRACKER_SERVER`：指定`tracker`服务的ip、端口，
@@ -24,9 +24,11 @@
 
   + `-v`：本机`/var/fdfs/storage`映射到容器中`/var/fdfs`
 
-  + `GROUP_NAME`：指定fastdfs中使用的分组名称
+  + `GROUP_NAME`：指定fastdfs中使用的分组名称(可选项，不指定默认分组名称为`group1`)
 
 + 进入`storage`容器
+
+  > 如果构建`storage`服务时没有指定`GROUP_NAME`，可以不进行这步
 
   ```shell
   docker exec -it storage /bin/bash
